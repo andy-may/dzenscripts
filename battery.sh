@@ -1,3 +1,5 @@
+#! /bin/bash
+COUNTER=0
 while true; do 
     BATTLEVEL=$(acpi -b | awk -F ', |%' '{print $2}')
     if [ $BATTLEVEL \> 75 ]; then
@@ -17,12 +19,40 @@ while true; do
 	    fi
 	fi
     fi
-    BATTSTATUS=$(acpi -b | awk -F ' |,' '{print $3}')
-    if [ "$BATTSTATUS" = "Charging" ]; then
+
+    BATTSTATUS=$(acpi -b | awk -F ' |,|-' '{print $3}')
+    CHARGESTATUS=$(acpi -b | awk -F ', ' '{print $3}')
+
+    if [ "$BATTSTATUS" = "Unknown" -o $BATTLEVEL == 100 ]; then
 	STATCOL="green"
 	ICON="power-ac.xbm"
+	CHARGESTATUS="Running off AC power"
+    else
+	if [ "$BATTSTATUS" = "Charging" ]; then
+	    STATCOL="green"
+	    case $COUNTER in
+		0)
+		    ICON="bat_empty_cm.xbm"
+		    ((COUNTER++))
+		    ;;
+		1)
+		    ICON="bat_low_cm.xbm"
+		    ((COUNTER++))
+		    ;;
+		2)
+		    ICON="bat_mid_cm.xbm"
+		    ((COUNTER++))
+		    ;;
+		3)
+		    ICON="bat_full_cm.xbm"
+		    COUNTER=0
+		    ;;
+	    esac
+	fi
     fi
+
+
     echo "^fg($STATCOL)^i(/home/cassie/git/dzen/bitmaps/$ICON) $BATTLEVEL%"
-    acpi -b | awk -F ', ' '{print $3}'
+    echo "$CHARGESTATUS"
     sleep 1
-done | dzen2 -w 180 -tw 100 -ta c -sa c -l 1 -u -x 975 
+done | dzen2 -w 200 -tw 90 -ta c -sa c -l 1 -u -x 985 -e 'button1=togglecollapse'

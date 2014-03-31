@@ -1,3 +1,5 @@
+#! /bin/bash
+
 while true; do
     date
     #cal | tail -n 7
